@@ -1,6 +1,6 @@
 {
   "_meta": {
-    "来源": "2026-10-13 真跑：Qoder 内置 webview（UA: Electron 43.1.1 / Chrome 150.0.7871.114）",
+    "来源": "2026-10-16 真跑：Qoder 内置 webview（UA: Electron 43.1.1 / Chrome 150.0.7871.114）",
     "页面": "file:///E:/tmp/i18n-pseudo.html（已收进 tests/fixtures/i18n-pseudo.html）",
     "调用": "getComputedStyle(el,'::before'|'::after'|'::marker').content + innerText + getBoundingClientRect，选择器限定 [data-expected]",
     "viewport_实测": [0, 0, 0],

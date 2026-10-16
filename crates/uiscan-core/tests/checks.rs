@@ -1,4 +1,4 @@
-//! 判据的判决性测试。期望值全部来自 2026-10-13 的两场实测：
+//! 判据的判决性测试。期望值全部来自 2026-10-16 的两场实测：
 //! ①Chromium 150（Qoder 内置 webview）在 `tests/fixtures/i18n-pseudo.html` 上跑
 //!   `getComputedStyle(el,'::before'/'::after'/'::marker').content` 的原样返回；
 //! ②UIA（x86_64-pc-windows-gnu）枚举顶层窗口拿到的矩形。

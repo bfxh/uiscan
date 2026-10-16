@@ -1,4 +1,4 @@
-//! TUI 采集的判决性测试。字节流与期望值都取自 2026-10-13 在 `E:\tmp\uic-probe\vt`
+//! TUI 采集的判决性测试。字节流与期望值都取自 2026-10-16 在 `E:\tmp\uic-probe\vt`
 //! 上真跑出来的输出（`cargo run` 原样贴回），不是按规范推的。
 
 use uiscan_core::{Channel, Harvest, Item};

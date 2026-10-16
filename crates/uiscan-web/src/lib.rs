@@ -1,6 +1,6 @@
 //! Web 面：在真 Chromium 里跑采集脚本，把返回值解析成 `Item`。
 //!
-//! **状态如实写**：本格只落地"采集脚本 + 解析层"。解析层的语料是 2026-10-13 在
+//! **状态如实写**：本格只落地"采集脚本 + 解析层"。解析层的语料是 2026-10-16 在
 //! Chromium 150（Qoder 内置 webview）真跑 `getComputedStyle` 拿到的原样 JSON
 //! （`tests/fixtures/pseudo-chromium.json`）；**CDP 实跑通道还没接**——Edge 155 的
 //! `--headless=new --remote-debugging-port` 已验过可用（`/json/version` 返回
