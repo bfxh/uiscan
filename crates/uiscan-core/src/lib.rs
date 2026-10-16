@@ -89,6 +89,11 @@ impl Harvest {
     /// 与 `candidates` 刻意不同口径：`✓ ✗ →` 不是待翻译文案，但缺字一样画成方框。
     /// 用候选集去查覆盖会漏掉整类缺陷（TUI 面实测到这条）。
     pub fn rendered_codepoints(&self) -> BTreeSet<char> {
-        non_ascii(self.items.iter().filter(|it| it.visible).map(|it| it.text.clone()))
+        non_ascii(
+            self.items
+                .iter()
+                .filter(|it| it.visible)
+                .map(|it| it.text.clone()),
+        )
     }
 }

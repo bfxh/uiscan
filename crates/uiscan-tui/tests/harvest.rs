@@ -73,8 +73,14 @@ fn ambiguous_width_symbols_are_kept_as_symbols_and_stay_out_of_the_text_gate() {
         !uiscan_core::looks_translatable(&sym.text),
         "纯符号不该进漏翻候选"
     );
-    assert!(h.rendered_codepoints().contains(&'→'), "但码点要留着，覆盖检查要用");
-    assert!(h.rendered_codepoints().contains(&'保'), "汉字码点要在集合里");
+    assert!(
+        h.rendered_codepoints().contains(&'→'),
+        "但码点要留着，覆盖检查要用"
+    );
+    assert!(
+        h.rendered_codepoints().contains(&'保'),
+        "汉字码点要在集合里"
+    );
 }
 
 #[test]

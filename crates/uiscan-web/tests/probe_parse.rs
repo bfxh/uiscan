@@ -80,7 +80,10 @@ fn unusable_geometry_keeps_everything_out_of_the_candidate_gate() {
     let h = harvest_from(FIXTURE);
     assert!(h.items.len() > 10, "通道本身要有产出：{}", h.items.len());
     assert_eq!(h.candidates().len(), 0, "几何不可信时不许产出候选条目");
-    assert!(h.rendered_codepoints().is_empty(), "没有可见条目时码点也必须为空");
+    assert!(
+        h.rendered_codepoints().is_empty(),
+        "没有可见条目时码点也必须为空"
+    );
 }
 
 #[test]
