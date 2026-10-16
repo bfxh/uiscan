@@ -1,0 +1,15 @@
+[workspace]
+members = ["crates/uiscan-core", "crates/uiscan-tui", "crates/uiscan-web", "crates/uiscan-cli"]
+resolver = "2"
+
+[workspace.package]
+version = "0.1.0"
+edition = "2021"
+license = "MIT OR Apache-2.0"
+
+[workspace.dependencies]
+uiscan-core = { path = "crates/uiscan-core" }
+uiscan-tui = { path = "crates/uiscan-tui" }
+uiscan-web = { path = "crates/uiscan-web" }
+vt100 = "0.16"
+serde_json = "1"

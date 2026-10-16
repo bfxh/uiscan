@@ -1,0 +1,13 @@
+[package]
+name = "uiscan-cli"
+version.workspace = true
+edition.workspace = true
+license.workspace = true
+
+[[bin]]
+name = "uiscan"
+path = "src/main.rs"
+
+[dependencies]
+uiscan-core = { workspace = true }
+uiscan-tui = { workspace = true }

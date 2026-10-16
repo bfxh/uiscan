@@ -1,0 +1,33 @@
+name: ci
+
+# 门禁只钉三件已在本机实测成立的事：格式、零告警、测试。
+# 工具链固定 x86_64-pc-windows-gnu —— 这台机器没有 MSVC，GUI 适配器要用 `windows` crate
+# 的 raw-dylib 路径，先把"GNU 能不能链"当成一条会被判红的门，而不是靠本机运气。
+on:
+  push:
+  pull_request:
+
+env:
+  CARGO_BUILD_JOBS: 1
+  CARGO_TERM_COLOR: always
+
+jobs:
+  gnu:
+    runs-on: windows-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: dtolnay/rust-toolchain@stable
+        with:
+          targets: x86_64-pc-windows-gnu
+      - run: cargo fmt --all --check
+      - run: cargo clippy --workspace --all-targets --target x86_64-pc-windows-gnu -- -D warnings
+      - run: cargo test --workspace --target x86_64-pc-windows-gnu
+
+  portable:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: dtolnay/rust-toolchain@stable
+      - run: cargo fmt --all --check
+      - run: cargo clippy --workspace --all-targets -- -D warnings
+      - run: cargo test --workspace
