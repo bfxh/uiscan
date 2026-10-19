@@ -1,3 +1,6 @@
+> **2026-10-16 已并入 [bfxh/ADV](https://github.com/bfxh/ADV)**：代码在工作区的 `crates/uiscan-*`
+> （文档 `docs/uiscan.md`）。本仓归档只作历史留存，不再更新。
+
 # uiscan
 
 把"**屏幕上真的出现了哪些文案**"抓出来，用来查静态扫描查不到的那类缺陷：硬编码/漏翻、
