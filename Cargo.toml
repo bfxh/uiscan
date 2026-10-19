@@ -1,5 +1,5 @@
 [workspace]
-members = ["crates/uiscan-core", "crates/uiscan-tui", "crates/uiscan-web", "crates/uiscan-cli"]
+members = ["crates/uiscan-core", "crates/uiscan-tui", "crates/uiscan-web", "crates/uiscan-gui", "crates/uiscan-cli"]
 resolver = "2"
 
 [workspace.package]
@@ -11,5 +11,6 @@ license = "MIT OR Apache-2.0"
 uiscan-core = { path = "crates/uiscan-core" }
 uiscan-tui = { path = "crates/uiscan-tui" }
 uiscan-web = { path = "crates/uiscan-web" }
+uiscan-gui = { path = "crates/uiscan-gui" }
 vt100 = "0.16"
 serde_json = "1"

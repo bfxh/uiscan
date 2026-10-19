@@ -10,7 +10,9 @@ use std::time::Duration;
 
 const USAGE: &str = "用法：
   uiscan tui-feed [--file <终端字节捕获，缺省读 stdin>] [--rows N=24] [--cols N=80]
-  uiscan web <url|file:///路径> [--window 1280x900] [--wait-secs 25] [--profile <目录>] [--port N] [--json <输出文件>]";
+  uiscan web <url|file:///路径> [--window 1280x900] [--wait-secs 25] [--profile <目录>] [--port N] [--json <输出文件>]
+  uiscan gui --list
+  uiscan gui (--title <子串> | --pid N | --focused) [--depth 12] [--nodes 20000] [--json <输出文件>]";
 
 fn bail(msg: &str) -> ! {
     eprintln!("{msg}\n{USAGE}");
@@ -25,6 +27,7 @@ fn main() {
     match cmd.as_str() {
         "tui-feed" => tui_feed(args),
         "web" => web(args),
+        "gui" => gui(args),
         other => bail(&format!("未接的面：{other}（GUI 的 UIA 适配器还没写）")),
     }
 }
@@ -157,6 +160,90 @@ fn report(h: &uiscan_core::Harvest) {
     }
     let cps = h.rendered_codepoints();
     println!("非 ASCII 码点 {} 个：{:?}", cps.len(), cps);
+}
+
+fn gui(mut args: impl Iterator<Item = String>) {
+    enum What {
+        List,
+        Title(String),
+        Pid(u32),
+        Focused,
+    }
+    let mut what: Option<What> = None;
+    let mut depth = 12usize;
+    let mut nodes = 20_000usize;
+    let mut dump: Option<PathBuf> = None;
+    while let Some(a) = args.next() {
+        let mut val = |name: &str| {
+            args.next()
+                .unwrap_or_else(|| bail(&format!("{name} 后面缺值")))
+        };
+        match a.as_str() {
+            "--list" => what = Some(What::List),
+            "--title" => what = Some(What::Title(val("--title"))),
+            "--pid" => {
+                what = Some(What::Pid(
+                    val("--pid")
+                        .parse()
+                        .unwrap_or_else(|_| bail("--pid 要数字")),
+                ))
+            }
+            "--focused" => what = Some(What::Focused),
+            "--depth" => {
+                depth = val("--depth")
+                    .parse()
+                    .unwrap_or_else(|_| bail("--depth 要正整数"))
+            }
+            "--nodes" => {
+                nodes = val("--nodes")
+                    .parse()
+                    .unwrap_or_else(|_| bail("--nodes 要正整数"))
+            }
+            "--json" => dump = Some(PathBuf::from(val("--json"))),
+            other => bail(&format!("不认得的参数：{other}")),
+        }
+    }
+    match what.unwrap_or_else(|| bail("gui 需要 --list / --title / --pid / --focused 之一")) {
+        What::List => {
+            let wins =
+                uiscan_gui::list_windows().unwrap_or_else(|e| bail(&format!("枚举窗口失败：{e}")));
+            for w in wins {
+                println!(
+                    "pid={:<6} rect={:?} offscreen={:<5} class={:<24} name={:?}",
+                    w.pid, w.rect, w.offscreen, w.class, w.name
+                );
+            }
+        }
+        What::Title(t) => finish(uiscan_gui::harvest_window(&t, depth, nodes), dump),
+        What::Pid(p) => finish(uiscan_gui::harvest_pid(p, depth, nodes), dump),
+        What::Focused => finish(uiscan_gui::harvest_focused(depth, nodes), dump),
+    }
+}
+
+fn finish(h: Result<uiscan_core::Harvest, String>, dump: Option<PathBuf>) {
+    let h = h.unwrap_or_else(|e| bail(&format!("采集失败：{e}")));
+    if let Some(path) = dump {
+        let items: Vec<serde_json::Value> = h
+            .items
+            .iter()
+            .map(|i| {
+                serde_json::json!({
+                    "loc": i.loc, "ch": channel_name(i.channel), "txt": i.text,
+                    "visible": i.visible,
+                    "rect": i.rect.map(|r| serde_json::json!({"x": r.x, "y": r.y, "w": r.w, "h": r.h}))
+                })
+            })
+            .collect();
+        let doc = serde_json::json!({"surface": h.surface, "items": items});
+        if let Err(e) = std::fs::write(
+            &path,
+            serde_json::to_string_pretty(&doc).unwrap_or_default(),
+        ) {
+            bail(&format!("写不了 {}：{e}", path.display()));
+        }
+        println!("items 已写 {}", path.display());
+    }
+    report(&h);
 }
 
 fn channel_name(c: uiscan_core::Channel) -> &'static str {
