@@ -9,6 +9,8 @@
 use serde::Deserialize;
 use uiscan_core::{css_content_to_text, Channel, Item, Rect};
 
+pub mod cdp;
+
 /// 页面内采集脚本。它用到的每个 API（`getComputedStyle(el,'::before'|'::after'|'::marker')
 /// .content`、`getBoundingClientRect`、遍历 `childNodes` 取直属文本节点、`getAttribute`）
 /// 都单独实测过返回形状；**整段脚本还没在浏览器里跑过** —— 接上 CDP 后要做的第一件事
@@ -113,4 +115,48 @@ pub fn probe_rows_to_items(json: &str) -> Result<Vec<Item>, serde_json::Error> {
         emit(&mut items, &r.cls, rect, Channel::TitleAttr, title);
     }
     Ok(items)
+}
+
+/// `HARVEST_JS` 跑回来的载荷 → 条目。与 `probe_rows_to_items` 的区别是形状：
+/// 这个是按通道逐条 (`{loc,ch,txt,rect}`) 的现跑格式，前者是 10-16 那次定点探针的 `rows[]`。
+/// 两条都留着，是为了让"现跑结果"能和"已核对的语料"并列比，而不是拿新结果覆盖旧结果。
+pub fn harvest_payload_to_items(payload: &serde_json::Value) -> Vec<Item> {
+    let mut items = Vec::new();
+    let rows = match payload["items"].as_array() {
+        Some(a) => a,
+        None => return items,
+    };
+    for row in rows {
+        let ch = match row["ch"].as_str() {
+            Some("PseudoBefore") => Channel::PseudoBefore,
+            Some("PseudoAfter") => Channel::PseudoAfter,
+            Some("Marker") => Channel::Marker,
+            Some("DomText") => Channel::DomText,
+            Some("PlaceholderAttr") => Channel::PlaceholderAttr,
+            Some("TitleAttr") => Channel::TitleAttr,
+            // 不认得的通道就整条丢，而不是硬塞进某个已有通道 —— 静默归类比丢更坏。
+            _ => continue,
+        };
+        let raw = row["txt"].as_str().unwrap_or("");
+        let text = if ch.is_generated() {
+            match css_content_to_text(raw) {
+                Some(t) => t,
+                None => continue,
+            }
+        } else {
+            raw.to_string()
+        };
+        if text.trim().is_empty() {
+            continue;
+        }
+        let r = &row["rect"];
+        let rect = Rect {
+            x: r["x"].as_i64().unwrap_or(0) as i32,
+            y: r["y"].as_i64().unwrap_or(0) as i32,
+            w: r["w"].as_i64().unwrap_or(0) as i32,
+            h: r["h"].as_i64().unwrap_or(0) as i32,
+        };
+        items.push(Item::new(text, ch, row["loc"].as_str().unwrap_or("")).with_rect(rect));
+    }
+    items
 }

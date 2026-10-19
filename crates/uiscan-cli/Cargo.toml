@@ -11,3 +11,5 @@ path = "src/main.rs"
 [dependencies]
 uiscan-core = { workspace = true }
 uiscan-tui = { workspace = true }
+uiscan-web = { path = "../uiscan-web" }
+serde_json = { workspace = true }

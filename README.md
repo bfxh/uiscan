@@ -25,14 +25,19 @@
 ## 现状（不含糊）
 - ✅ `uiscan-core`：模型 + 判据（9 条测试）
 - ✅ `uiscan-tui`：vt100 采集（5 条测试 + CLI 端到端跑通，21 个非 ASCII 码点与探针对得上）
-- 🟡 `uiscan-web`：采集脚本 + 解析层就位，语料是真跑回来的 JSON（5 条测试）；**CDP 实跑还没接**。
-  本机没有 `msedgedriver`，但 Edge 155 的 `--headless=new --remote-debugging-port` 已验通
-  （`/json/version` 返 `Edg/155.0.4283.45`）⇒ 走 CDP 直连，不走 WebDriver。
-  ⚠ `HARVEST_JS` **整段还没在浏览器里跑过**（里面每个 API 单独实测过），接上后第一件事是拿它跑
-  `tests/fixtures/i18n-pseudo.html` 和 `pseudo-chromium.json` 逐条对账。
+- ✅ `uiscan-web`：**已接 CDP 并真跑过**。本机没有 `msedgedriver`，所以不走 WebDriver：
+  由工具自己起 `msedge --headless=new --remote-debugging-port`，读 `/json/list` 挑页、连 ws 跑
+  `HARVEST_JS`。真跑读数：Edge `155.0.4283.45`、viewport `[1256,808,1256]`、12 项植入期望全中；
+  语料 `tests/fixtures/payload-edge155.json` 上钉了 6 条回归（含"隐藏元素进采集但不进候选"）。
+  接通过程中踩到并修掉的三个真 bug（都写进代码注释了，别重犯）：
+  1. `Runtime.evaluate` 直接喂箭头函数源码只会得到**函数对象**（`returnByValue` 序列化成 `{}`）⇒
+     必须包成 `(fn)()`。症状很阴：`rc=0`、viewport 为 Null、0 条。
+  2. CDP 的 page 目标**早于 DOM 就绪**就出现 ⇒ 立刻采会得到"viewport 正常、items 为空"的**假成功**；
+     必须先等 `document.readyState === "complete"`。
+  3. DevTools 的 HTTP 端点**不理会 `Connection: close`**，`read_to_end` 会一路挂到读超时（10060）；
+     必须按 `Content-Length`/chunk 边界读够就收。（我一度以为是它校验 `Host` 头——那只是假设，没验过，作废。）
 - ⬜ `uiscan-gui`（UIA）：适配器未写，编译链接可行性已在本机证过。
-- ⬜ 截断/重叠判据：需要**有尺寸的窗口**。本次采集环境的 `innerWidth` 实测为 0 ⇒ 几何不可信，
-  判据此刻正确地什么都不产出（宁可不报）。
+- ⬜ 截断/重叠判据：Web 面现在有真窗口尺寸了（`--window`），可以量；TUI 面用格宽；GUI 面等适配器。
 
 ## 跑
 ```
